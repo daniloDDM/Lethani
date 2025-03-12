@@ -1,3 +1,4 @@
+package sources;
 public class Token {
 	String tipo;
 	String lexema;

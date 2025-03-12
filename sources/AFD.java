@@ -1,3 +1,4 @@
+package sources;
 import java.text.CharacterIterator;
 
 public abstract class AFD{
