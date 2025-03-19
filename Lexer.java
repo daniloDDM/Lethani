@@ -15,6 +15,8 @@ public class Lexer{
 		afds = new ArrayList<>();
 		afds.add(new MathOperator());
 		afds.add(new Number());
+                afds.add(new Reservado());
+                afds.add(new Identificador());
 	}
 	
 	public void skipWhiteSpace(){
