@@ -1,3 +1,5 @@
+package Lexico;
+
 import java.text.CharacterIterator;
 import java.text.StringCharacterIterator;
 import java.util.ArrayList;
@@ -17,6 +19,7 @@ public class Lexer{
 		afds.add(new Number());
                 afds.add(new Reservado());
                 afds.add(new Identificador());
+                afds.add(new StringID());
 	}
 	
 	public void skipWhiteSpace(){
@@ -32,7 +35,7 @@ public class Lexer{
 			t = searchNextToken();
 			if(t == null) erro();
 			tokens.add(t);
-		}while (t.tipo != "EOF");
+		}while (!"EOF".equals(t.tipo));
 		return tokens;
 	}
 	

@@ -1,3 +1,5 @@
+package Lexico;
+
 import java.text.CharacterIterator;
 
 public class Reservado extends AFD{
@@ -13,7 +15,7 @@ public class Reservado extends AFD{
                             code.next();
                             return new Token("RES", string);
                             }
-                        case "segunda_voz" -> { // = ELSE_IF
+                        case "segunda" -> { // = ELSE_IF(IF ENCADEADO)
                             code.next();
                             return new Token("RES", string);
                             }
@@ -25,15 +27,27 @@ public class Reservado extends AFD{
                             code.next();
                             return new Token("RES", string);
                             }
-                        case "pausa" -> { // = BREAK
-                            code.next();
-                            return new Token("RES", string);
-                            }
-                        case "dizer" -> {// = RETURN (responder)
+                        case "retorna" -> {// = RETURN
                             code.next();
                             return new Token("RES", string);
                             }
                         case "ecoar" -> { // = WHILE
+                            code.next();
+                            return new Token("RES", string);
+                            }
+                        case "nomear" -> { // = FUNCTION
+                            code.next();
+                            return new Token("RES", string);
+                            }
+                        case "vincular" -> { // = VAR 
+                            code.next();
+                            return new Token("RES", string);
+                            }
+                        case "cantar" -> { // = WRITELN
+                            code.next();
+                            return new Token("RES", string);
+                            }
+                        case "inscrever" -> { // = READLN
                             code.next();
                             return new Token("RES", string);
                             }

@@ -1,3 +1,5 @@
+package Lexico;
+
 public class TesteToken{
 	
 	public static void main(String[] args) {

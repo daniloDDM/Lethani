@@ -1,0 +1,16 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<project-private xmlns="http://www.netbeans.org/ns/project-private/1">
+    <editor-bookmarks xmlns="http://www.netbeans.org/ns/editor-bookmarks/2" lastBookmarkId="0"/>
+    <open-files xmlns="http://www.netbeans.org/ns/projectui-open-files/2">
+        <group>
+            <file>file:/C:/Users/danda/OneDrive/Documentos/NetBeansProjects/pjCompiladores/src/Main.java</file>
+            <file>file:/C:/Users/danda/OneDrive/Documentos/NetBeansProjects/pjCompiladores/src/Sintatico/Parser.java</file>
+            <file>file:/C:/Users/danda/OneDrive/Documentos/NetBeansProjects/pjCompiladores/src/Lexico/Lexer.java</file>
+            <file>file:/C:/Users/danda/OneDrive/Documentos/NetBeansProjects/pjCompiladores/src/Lexico/Reservado.java</file>
+            <file>file:/C:/Users/danda/OneDrive/Documentos/NetBeansProjects/pjCompiladores/src/Lexico/MathOperator.java</file>
+            <file>file:/C:/Users/danda/OneDrive/Documentos/NetBeansProjects/pjCompiladores/src/Lexico/Identificador.java</file>
+            <file>file:/C:/Users/danda/OneDrive/Documentos/NetBeansProjects/pjCompiladores/src/Lexico/AFD.java</file>
+            <file>file:/C:/Users/danda/OneDrive/Documentos/NetBeansProjects/pjCompiladores/src/Lexico/StringID.java</file>
+        </group>
+    </open-files>
+</project-private>
