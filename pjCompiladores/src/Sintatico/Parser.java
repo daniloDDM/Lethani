@@ -1,5 +1,4 @@
 package Sintatico;
-
 import Lexico.Token;
 import java.util.List;
 import java.nio.file.Files;
@@ -10,9 +9,13 @@ public class Parser {
 	
 	List<Token> tokens;
 	Token token;
+        Tree tree;
+        Node root;
 	
 	public Parser(List<Token> tokens){
 		this.tokens = tokens;
+                this.root = new Node("--> RAIZ <--");
+                this.tree = new Tree(root);
 	}
 	
 	public Token getNextToken() {
@@ -30,50 +33,52 @@ public class Parser {
 	
 	// adicionar métodos aqui -----------
 	
-	public void main() {
+	public Tree main() {
 		token = getNextToken();
-                if(
-                    firstL("vincular")){
-                    var();
-                }
-                
-                traduz("""
-                       begin
-                       """);
-                
-                if(startProg()){
+                Node Root = new Node("main");
+                tree.setRoot(Root);
+                if(startProg(Root)){
                     traduz("end.");
-                    if(token.tipo.equals("EOF")){
+                    if(matchT("EOF", Root)){
                         System.out.println("sintaticamente correto");
                             try {
                                 Files.writeString(Path.of("saida.pas"), saida.toString());
-                                System.out.println("✅ Código Pascal salvo como 'saida.pas'");
+                                System.out.println("Código salvo como 'saida.pas'");
                             } catch (IOException e) {
                                 e.printStackTrace();
                             }
-                    }
+                    } else {
+                        erro("main");
+                        System.out.print("Parse error");
+                    }   
                 }
-                erro("main");
+                return null;
 	}
         
-       public boolean startProg() {
-           return lista();
+       public boolean startProg(Node root) {
+           Node startProg = new Node("Start Prog");
+           return lista(startProg);
        }
         
-       public boolean lista() {
-           return (comandos() && lista() || true);
+       public boolean lista(Node node) {
+           Node lista = node.addNode("lista");
+           return (comandos(lista) && lista(lista) || true);
        }
        
-       public boolean comandos() {
-           return (funcao() || alarif() || funCall() || print() || forCompasso() || ecoarWhile() || input() || atrVar());
+       public boolean comandos(Node node) {
+           Node comandos = node.addNode("comandos");
+           return (var(comandos) || funcao(comandos) || alarif(comandos) || funCall(comandos) || print(comandos) || forCompasso(comandos) || ecoarWhile(comandos) || input(comandos) || atrVar(comandos));
        }
        
-        public boolean ecoarWhile() {
+        public boolean ecoarWhile(Node node) {
             if(firstL("ecoar")){
+                Node ecoar = node.addNode("ecoarWhile");
                 if(
-                        matchL("ecoar", "while") &&
-                        condicao() &&
-                        bloco()
+                        matchL("ecoar", "while", ecoar) &&
+                        matchL("(", " ", ecoar) &&
+                        expressao(ecoar) &&
+                        matchL(")", " do \n", ecoar) &&
+                        bloco(ecoar)
                         ) {
                     return true;
                 }
@@ -83,16 +88,17 @@ public class Parser {
         }
         
         //FOR -> compasso (expr(); fator()) {bloco}
-        public boolean forCompasso() {
+        public boolean forCompasso(Node node) {
             if(firstL("compasso")){
+                Node compasso = node.addNode("forCompasso");
                 if(
-                        matchL("compasso", "for") &&
-                        matchL("(", " ") &&
-                        expressao() &&
-                        matchL(";", " to ") &&
-                        fator() &&
-                        matchL(")", " do \n") &&
-                        bloco()) {
+                        matchL("compasso", "for", compasso) &&
+                        matchL("(", " ", compasso) &&
+                        expressao(compasso) &&
+                        matchL(";", " to ", compasso) &&
+                        fator(compasso) &&
+                        matchL(")", " do \n", compasso) &&
+                        bloco(compasso)) {
                     return true;
                 }
                 erro("for");
@@ -101,41 +107,51 @@ public class Parser {
         }
         
         //VAR -> vincular operador_atribuicao ID 
-        public boolean var() {
+        public boolean var(Node node) {
             if(
                     firstL("vincular")){
-                if(   
-                        matchL("vincular", "var \n") &&
-                        id() &&
-                        matchL("=", ":") &&
-                        tipoVar()){
-                    traduz(";\n \n");
-                    return true;
-                }
+                Node var = node.addNode("var");
+                if(matchL("vincular", "var \n", var)){
+                    while(
+                            id(var) &&
+                            matchL("=", ":", var) &&
+                            tipoVar(var)){
+                        if(   
+                                matchL(";", "", var)){
+                            traduz("\n \n");
+                            traduz("begin \n");
+                            return true;
+                        }
+                    }
                 erro("var");
             }
-            return false;
         
         }
+            return false;
+        }
+            
         
         //TIPOVAR -> verifica o tipo de variável declarada
-        public boolean tipoVar() {
+        public boolean tipoVar(Node node) {
+            Node tipoVar = node.addNode("tipoVar");
             if(
-                    matchL("int", "integer") ||
-                    matchL("string", "string") ||
-                    matchL("float", "real")){
+                    matchL("int", "integer", tipoVar) ||
+                    matchL("string", "string", tipoVar) ||
+                    matchL("float", "real", tipoVar)){
+                traduz("; \n");
                 return true;
             }
             erro("tipoVar");
             return false;
         }
         
-         public boolean atrVar(){
+         public boolean atrVar(Node node){
              if(firstT(token.tipo)){
+                 Node atrVar = node.addNode("atrVar");
                 if(
-                        id() &&
-                        matchL("=", ":=") &&
-                        fator()){
+                        id(atrVar) &&
+                        matchL("=", ":=", atrVar) &&
+                        fator(atrVar)){
                     traduz("; \n");
                     return true;
                 }
@@ -145,12 +161,13 @@ public class Parser {
         }
         
         // FUNCAO -> nomear ID FUNCAO_PARAM
-        public boolean funcao() {
+        public boolean funcao(Node node) {
             if(firstL("nomear")){
+                Node funcao = node.addNode("funcao");
                 if(
-                         matchL("nomear", "function") &&
-                        id() &&
-                        funParam()) {
+                         matchL("nomear", "function", funcao) &&
+                        id(funcao) &&
+                        funParam(funcao)) {
                     erro("funcao");
                     return true; 
                 }
@@ -159,15 +176,16 @@ public class Parser {
             return false;
         }
         
-        public boolean funParam() {
+        public boolean funParam(Node node) {
+            Node funParam = node.addNode("funParam");
             if(
                     token.tipo.equals("EOF")
                     ) {return true;}
             if(
-                    matchL("param", "com") &&
-                    expressao() &&                   
-                    bloco() ||
-                    bloco()) {
+                    matchL("param", "com", funParam) &&
+                    expressao(funParam) &&                   
+                    bloco(funParam) ||
+                    bloco(funParam)) {
                 return true;
             }
             erro("funParam");
@@ -175,12 +193,13 @@ public class Parser {
         }
         
             //FUNCALL -> invocar ID FUNCALLPARAM
-            public boolean funCall() {
+            public boolean funCall(Node node) {
                 if(firstL("invocar")){
+                    Node funCall = node.addNode("funCall");
                     if(
-                            matchL("invocar", "fct := ") &&
-                            id() &&
-                            funCallParam()){
+                            matchL("invocar", "fct := ", funCall) &&
+                            id(funCall) &&
+                            funCallParam(funCall)){
                         return true;
                     }
                     erro("funCall");
@@ -188,13 +207,14 @@ public class Parser {
                 return false;
             }
             
-            public boolean funCallParam() {
+            public boolean funCallParam(Node node) {
+                Node funCallParam = node.addNode("callParam");
                 if(
                     token.tipo.equals("EOF")
                     ) {return true;}
                 if(
-                        matchL("param", "com") &&
-                        fator()) {
+                        matchL("param", "com", funCallParam) &&
+                        fator(funCallParam)) {
                     return true;
                 }
                 erro("funCallParam");
@@ -202,15 +222,16 @@ public class Parser {
             }
 	
             //IF -> (condicao) alar {bloco} ELSE IF
-            public boolean alarif() {
+            public boolean alarif(Node node) {
                 if(firstL("(")){
+                    Node alarif = node.addNode("alarIf");
                     if( 
-                            matchL("(", "if(") &&
-                            condicao() && 
-                            matchL("alar", "then" + "\n") && 
-                            bloco() && 
-                            elseif() ||
-                            elseif()){
+                            matchL("(", "if(", alarif) &&
+                            condicao(alarif) && 
+                            matchL("alar", "then" + "\n", alarif) && 
+                            bloco(alarif) && 
+                            elseif(alarif) ||
+                            elseif(alarif)){
                         traduz("end.");
                         return true;
                             }
@@ -219,17 +240,18 @@ public class Parser {
                 return false;
             }
         
-        public boolean elseif() {
+        public boolean elseif(Node node) {
+            Node elseIf = node.addNode("elseIf");
             if(
                     token.tipo.equals("EOF")
                     ) {return true;}
             if(
-                    matchL("segunda", "then" + "\n")  && 
-                    bloco() && 
-                    matchL("desdobramento", "else" + "\n") && 
-                    bloco() ||
-                    matchL("desdobramento", "else" + "\n") && 
-                    bloco() ||
+                    matchL("segunda", "then" + "\n", elseIf)  && 
+                    bloco(elseIf) && 
+                    matchL("desdobramento", "else" + "\n", elseIf) && 
+                    bloco(elseIf) ||
+                    matchL("desdobramento", "else" + "\n", elseIf) && 
+                    bloco(elseIf) ||
                     token.tipo.equals("EOF")
                     ) {
                 return true;
@@ -240,13 +262,14 @@ public class Parser {
         }
         
         //READLN -> inscrever ('ID | NUM')
-        public boolean input() {
+        public boolean input(Node node) {
             if(firstL("inscrever")){
+                Node input = node.addNode("input");
                 if(
-                        matchL("inscrever", "readln") &&
-                        matchL("(", "(") &&
-                        fator() &&
-                        matchL(")", ")")) {
+                        matchL("inscrever", "readln", input) &&
+                        matchL("(", "(", input) &&
+                        fator(input) &&
+                        matchL(")", ")", input)) {
                     traduz("; \n");
                     return true;
                 }
@@ -256,14 +279,13 @@ public class Parser {
         }
         
         //WRITELN -> cantar (’ ID | NUM ’)
-        public boolean print() {
+        public boolean print(Node node) {
             if(firstL("cantar")){
+                Node print = node.addNode("print");
                 if(
-                        matchL("cantar", "writeln") &&
-                        matchL("(", "(") &&
-                        fator() &&
-                        matchL(")", ")")
-                        ) {
+                        matchL("cantar", "writeln", print) &&
+                        matchL("(", "(", print) &&
+                        printContent(print)) {
                     traduz("""
                            ;
                            """);
@@ -274,33 +296,37 @@ public class Parser {
             return false;
         }
         
-        public boolean condicao() {
+        public boolean condicao(Node node) {
+            Node condicao = node.addNode("condicao");
             if(
-                    matchL("(","(") && 
-                    id() && 
-                    operador() && 
-                    num() &&
-                    matchL(")",")") ||
-                    id() && 
-                    operador() && 
-                    num() &&
-                    matchL(")",")")) {
+                    matchL("(","(", condicao) && 
+                    id(condicao) && 
+                    operador(condicao) && 
+                    fator(condicao) &&
+                    matchL(")",")", condicao) ||
+                    id(condicao) && 
+                    operador(condicao) && 
+                    fator(condicao) &&
+                    matchL(")",")", condicao)) {
 			return true;
 		}
 		erro("condicao");
 		return false;
 	}
         
-        public boolean bloco(){
+        public boolean bloco(Node node){
             traduz("begin \n");
-            if(matchL("{", "")) {
-                while( 
-                        id() && operador() && num() ||
-                        id() && operador() && fator() ||
-                        print() ||
-                        fator()){
+            Node bloco = node.addNode("bloco");
+            if(matchL("{", "", bloco)) {
+                while(
+                        id(bloco) && operador(bloco) && num(bloco) ||
+                        id(bloco) && operador(bloco) && fator(bloco) ||
+                        retorna(bloco) ||
+                        print(bloco) ||
+                        fator(bloco)
+                        ){
                     if(
-                            matchL("}","\n")){
+                            matchL("}","\n", bloco)){
                         traduz("end \n");
                     return true;
                     }
@@ -311,26 +337,53 @@ public class Parser {
             return false;
         }
         
-        public boolean retorna() {
-            if(
-                    fator()){
-                traduz(");");
-                return true;
+        public boolean retorna(Node node) {
+            Node retorna = node.addNode("retorna");
+            if(firstL("retorna")){
+                if(
+                        matchL("retorna", "\n writeLn (", retorna) &&
+                        fator(retorna)){
+                    traduz(");");
+                    return true;
+                }
+                erro("retorna");
             }
-            erro("retorna");
             return false;
         }
         
-        public boolean fator(){
+        public boolean printContent(Node node) {
+            Node printContent = node.addNode("printContent");
+            if(firstT(token.tipo)){
+                if(
+                        id(printContent) &&
+                        operador(printContent) &&
+                        id(printContent) &&
+                        matchL(")", ")", printContent) ||
+                        id(printContent) &&
+                        matchL(")", ")", printContent) ||
+                        num(printContent) &&
+                        matchL(")", ")", printContent) ||
+                        matchL(")", ")", printContent)
+                        ){
+                    return true;
+                }
+                erro("printContent");
+            }
+            return false;
+        }
+        
+        public boolean fator(Node node){
+            Node fator = node.addNode("fator");
             if (
-                        matchL("writeln", "cantar")){
-                    print();
+                        matchL("writeln", "cantar", fator)){
+                    print(fator);
                 }
             if(
-                    id() ||
-                    num() ||
-                    operador() ||
-                    expressao()) {
+                    id(fator) ||
+                    num(fator) ||
+                    operador(fator) ||
+                    expressao(fator) ||
+                    retorna(fator)) {
                 return true;
             }
             
@@ -338,54 +391,55 @@ public class Parser {
             return false;
         }
 	
-	public boolean id(){
-		return matchT("ID", token.lexema);
+	public boolean id(Node node){
+            Node id = node.addNode("id");
+		return matchT("ID", token.lexema, id);
 	}
 	
-	public boolean num(){
-		return matchT("NUM", token.lexema);
+	public boolean num(Node node){
+            Node num = node.addNode("num");
+		return matchT("NUM", token.lexema, num);
 	}
 	
-	public boolean operador(){
+	public boolean operador(Node node){
+            Node operador = node.addNode("operador");
+            if(firstL("<") || firstL("+") || firstL(">") || firstL("-") || firstL("*") || firstL("/") || firstL("=") || firstL("==") || firstL(":") || firstL(";")){
 		if(
-                        matchL(">", ">") || 
-                        matchL("<", "<") ||
-                        matchL("+", "+") ||
-                        matchL("-", "-") ||
-                        matchL("*", "*") ||
-                        matchL("/", "/") ||
-                        matchL("=", ":=") ||
-                        matchL("==", "=") ||
-                        matchL(":", ":") ||
-                        matchL(";", ";\n")) {
+                        matchL(">", ">", operador) || 
+                        matchL("<", "<", operador) ||
+                        matchL("+", "+", operador) ||
+                        matchL("-", "-", operador) ||
+                        matchL("*", "*", operador) ||
+                        matchL("/", "/", operador) ||
+                        matchL("=", ":=", operador) ||
+                        matchL("==", "=", operador) ||
+                        matchL(":", ":", operador) ||
+                        matchL(";", ";\n", operador)) {
 			return true;
 		}
-		erro("operador");
-		return false;
-	}
+                erro("operador");
+            }
+            return false;
+        }
 	
-	public boolean expressao(){
+	public boolean expressao(Node node){
+            Node expressao = node.addNode("expressao");
+            if(firstT(token.tipo)){
 		if(
-                        id() && 
-                        operador() && 
-                        fator()) {
+                        id(expressao) && 
+                        operador(expressao) && 
+                        fator(expressao)) {
 			return true;
 		}
 		erro("expressao");
-		return false;
-	}
-	
-	/*public boolean matchL(String lexema){
-		if(token.lexema.equals(lexema)){
-			token = getNextToken();
-			return true;
-		}
-		return false;
-	}*/
+        }
+            return false;
+        }
         
-        public boolean matchL(String palavra, String newCode){
+        public boolean matchL(String palavra, String newCode, Node node){
 		if(token.lexema.equals(palavra)){
                         traduz(newCode);
+                        node.addNode(token.lexema);
 			token = getNextToken();
 			return true;
 		}
@@ -399,23 +453,26 @@ public class Parser {
         public boolean firstT(String tipo){
             return token.tipo.equals("ID");
         }
-	
-	/*public boolean matchT(String tipo){
-		if(token.tipo.equals(tipo)){
-			token = getNextToken();
-			return true;
-		}
-		return false; 
-	}*/
         
-        public boolean matchT(String palavra, String newCode){
+        public boolean matchT(String palavra, String newCode, Node node){
 		if(token.tipo.equals(palavra)){
                     traduz(newCode);
-			token = getNextToken();
-			return true;
+                    node.addNode(token.lexema);
+                    token = getNextToken();
+                    return true;
 		}
 		return false;
-	} 
+	}
+        
+        public boolean matchT(String palavra, Node node){
+		if(token.tipo.equals(palavra)){
+                    traduz(palavra);
+                    node.addNode(token.lexema);
+                    token = getNextToken();
+                    return true;
+		}
+		return false;
+	}
         
         private final StringBuilder saida = new StringBuilder();
         
@@ -426,5 +483,9 @@ public class Parser {
            
             
         }
+
+    private boolean ifelse(Node root) {
+        throw new UnsupportedOperationException("Not supported yet."); // Generated from nbfs://nbhost/SystemFileSystem/Templates/Classes/Code/GeneratedMethodBody
+    }
         
 }

@@ -1,29 +1,7 @@
-/*
 import Lexico.Lexer;
 import Lexico.Token;
 import Sintatico.Parser;
-import java.io.IOException;
-import java.util.List;
-
-public class Main {
-	
-	public static void main(String[] args) throws IOException {
-            List<Token> tokens = null;
-            String data = "vincular i = int compasso ( i = 10; - 1) { cantar ( i ) } ";
-            Lexer lexer = new Lexer(data);
-            tokens = lexer.getTokens();
-            for(Token t : tokens) {
-                System.out.println(t);
-            }
-            Parser parser = new Parser(tokens);
-            parser.main();
-            
-	}
-}*/
-
-import Lexico.Lexer;
-import Lexico.Token;
-import Sintatico.Parser;
+import Sintatico.Tree;
 import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
@@ -52,3 +30,20 @@ public class Main {
         parser.main();
     }
 }
+
+/*
+public class Main {
+	
+	public static void main(String[] args) throws IOException {
+            List<Token> tokens = null;
+            String data = "vincular i = int compasso ( i = 10; - 1) { cantar ( i ) } ";
+            Lexer lexer = new Lexer(data);
+            tokens = lexer.getTokens();
+            for(Token t : tokens) {
+                System.out.println(t);
+            }
+            Parser parser = new Parser(tokens);
+            parser.main();
+            
+	}
+}*/

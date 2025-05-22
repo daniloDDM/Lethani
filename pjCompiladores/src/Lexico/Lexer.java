@@ -23,16 +23,18 @@ public class Lexer{
 	}
 	
 	public void skipWhiteSpace(){
-		while (code.current() == ' ' || code.current() == '\n') {
+		while (code.current() == '\n' || code.current() == ' ') {
 			code.next();
 		}
 	}
 	
 	public List<Token> getTokens() {
 		Token t;
+                
 		do {
 			skipWhiteSpace();
 			t = searchNextToken();
+                        System.out.println(t);
 			if(t == null) erro();
 			tokens.add(t);
 		}while (!"EOF".equals(t.tipo));
@@ -50,6 +52,6 @@ public class Lexer{
 	}
 	
 	public void erro(){
-		new RuntimeException("Character não reconhecido: " + code.current());
+		throw new RuntimeException("Character não reconhecido: " + code.current());
 	}
 }

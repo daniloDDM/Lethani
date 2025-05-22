@@ -15,8 +15,9 @@ public class Number extends AFD {
                         code.next();
                         number += readNumber(code);
                         }
-                        if(isTokenSeparator(code)){
-                        return new Token("NUM", number);
+                        
+                        if(isTokenSeparator(code)) {
+                            return new Token("NUM", number);
                         }
 		}
 		return null;

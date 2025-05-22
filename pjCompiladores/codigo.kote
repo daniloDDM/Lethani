@@ -1,1 +1,1 @@
-vincular i = int compasso ( i = 1; 10 ) { cantar ( i ) }
+vincular a=int; inscrever ( a ) ecoar ( a < 10 ) { cantar ( a ) }

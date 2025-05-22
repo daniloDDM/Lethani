@@ -1,10 +1,12 @@
 var 
-i:integer;
+a:integer; 
+
  
-begin
-for i:=1 to 10 do 
 begin 
-writeln(i);
+readln(a); 
+while a<10 do 
+begin 
+writeln(a);
 
 end 
-end.
+end.EOF
